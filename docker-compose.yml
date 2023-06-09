@@ -1,0 +1,40 @@
+version: '3.9'
+services:
+  # MySQL Container
+  nikken_db:
+    build:
+      context: ./db
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+  # Frontend Container
+  nikken_front:
+    build:
+      context: ./nikken-front
+      args:
+        - VITE_BACKEND_URL=${BACKEND_URL}
+    ports:
+      - "${FRONTEND_PORT}:8080"
+  # Backend Container
+  nikken_back:
+    build:
+      context: ./nikken-back
+      args:
+        - FRONTEND_URL=${FRONTEND_URL}
+        - MYSQL_HOST=${MYSQL_HOST}
+        - MYSQL_PORT=${MYSQL_PORT}
+        - MYSQL_DATABASE=${MYSQL_DATABASE}
+        - MYSQL_USER=${MYSQL_USER}
+        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    extra_hosts:
+      host.docker.internal: host-gateway
+    ports:
+      - "${BACKEND_PORT}:3000"
